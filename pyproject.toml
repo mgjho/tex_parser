@@ -1,0 +1,165 @@
+[build-system]
+requires = ["setuptools>=61", "setuptools-scm>=8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tex_parser"
+version = "0.0.1"
+authors = [{ name = "Mingi Jho", email = "mingi.jho@kaist.ac.kr" }]
+description = "tex_parser"
+readme = "README.md"
+requires-python = ">=3.11"
+keywords = ["Tex", "Markdown"]
+# license = { file = "LICENSE" }
+classifiers = [
+    "Development Status :: 4 - Beta",
+    # "Intended Audience :: Science/Research",
+    # "Topic :: Scientific/Engineering :: Physics",
+    # "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pre-commit>=3.7.0",
+    "pytest-cov>=5.0.0",
+    "pytest>=8.3.0",
+    "commitizen>=3.29.0",
+    "ruff>=0.6.3",
+]
+
+
+[project.urls]
+Repository = "https://github.com/mgjho/tex_parser.git"
+Issues = "https://github.com/mgjho/tex_parser/issues"
+
+[tool.commitizen]
+change_type_map = { "BREAKING CHANGE" = "💥 Breaking Changes", "feat" = "✨ Features", "fix" = "🐞 Bug Fixes", "refactor" = "♻️ Code Refactor", "perf" = "⚡️ Performance" }
+
+version_provider = "pep621"
+update_changelog_on_bump = true
+tag_format = "v$version"
+changelog_merge_prerelease = true
+
+major_version_zero = true
+change_type_order = [
+    "💥 Breaking Changes",
+    "✨ Features",
+    "🐞 Bug Fixes",
+    "♻️ Code Refactor",
+    "⚡️ Performance",
+]
+
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools_scm]
+
+[tool.ruff]
+line-length = 88
+indent-width = 4
+
+[tool.ruff.lint]
+select = [
+    "F",
+    "E",
+    "W",
+    "I",
+    "D",
+    "UP",
+    "YTT",
+    "ASYNC",
+    "B",
+    "A",
+    "C4",
+    "FA",
+    "ICN",
+    "LOG",
+    "G",
+    "PIE",
+    "PYI",
+    "PT",
+    "Q",
+    "RSE",
+    "RET",
+    "SIM",
+    "TID",
+    "TCH",
+    "INT",
+    "TRY",
+    "FLY",
+    "NPY",
+    "PERF",
+    "FURB",
+    "RUF",
+]
+ignore = [
+    "E501",    # Line too long
+    "PLW2901", # Outer variable overwritten by inner target
+    "ICN001",  # Import conventions
+    "TRY003",  # Long exception messages
+    "D100",    # Missing docstring in public module
+    "D101",    # Missing docstring in public class
+    "D102",    # Missing docstring in public method
+    "D103",    # Missing docstring in public function
+    "D104",    # Missing docstring in public package
+    "D105",    # Missing docstring in magic method
+]
+extend-select = []
+allowed-confusables = [
+    "×",
+    "−",
+    "𝑎",
+    "𝒂",
+    "𝑏",
+    "𝒃",
+    "𝑐",
+    "𝑥",
+    "𝑦",
+    "𝑧",
+    "𝛼",
+    "γ",
+    "𝛾",
+    "ν",
+    "α",
+]
+exclude = ["*.ipynb"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
+
+[tool.isort]
+profile = "black"
+
+[tool.pytest.ini_options]
+addopts = ["--import-mode=importlib"]
+pythonpath = "src"
+testpaths = "tests"
+
+[tool.coverage.run]
+source = ["src"]
+concurrency = ["multiprocessing", "thread"]
+
+[tool.mypy]
+plugins = ["numpy.typing.mypy_plugin"]
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+allow_redefinition = true
+check_untyped_defs = false
+exclude = ['^docs/', '^tests/']
+disable_error_code = ['import-untyped', 'import-not-found']
+pretty = true
