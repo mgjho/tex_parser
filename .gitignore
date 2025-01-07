@@ -1,5 +1,7 @@
 *.DS_Store
 *.bib
+*.egg-info
+*.pyc
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
