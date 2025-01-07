@@ -5,7 +5,7 @@ Python based Tex parser
 Clone the repository and install the package in editable mode:
 
 ```bash
-cd /path/to/dsfit
+cd /path/to/file
 pip install -e . --config-settings editable_mode=compat --no-deps
 ```
 ___
