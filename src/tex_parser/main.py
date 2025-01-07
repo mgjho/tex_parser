@@ -10,7 +10,7 @@ out_file_modified_by_script = False
 
 
 def extract_first_sentence_from_paragraphs(tex_file):
-    with open(tex_file, "r") as file:
+    with open(tex_file) as file:
         content = file.read()
 
     # Find the position of \maketitle and process content from there
@@ -50,20 +50,39 @@ def monitor_file(file_path, callback, interval=1):
 def process_out_file(tex_file, md_file, out_file):
     global out_file_modified_by_script
     first_sentences, _ = extract_first_sentence_from_paragraphs(tex_file)
-    with open(md_file, "r") as file:
+    with open(md_file) as file:
         summaries = file.readlines()
     with open(out_file, "w") as out_file_obj:
         out_file_obj.write(f"Summary of {tex_file}\n ---")
         for idx, sentence in enumerate(first_sentences):
             summary = summaries[idx] if idx < len(summaries) else ""
+            summary = summary.strip()
+            # Not having a \n after summary is intentional
             out_file_obj.write(f"\n{summary}: _{sentence}_\n")
     print("Changes detected, processing out file.")
     out_file_modified_by_script = True
 
 
+def update_md_file_from_out(md_file, out_file):
+    global md_file_modified_by_script
+    with open(out_file) as file:
+        lines = file.readlines()
+
+    updated_summaries = []
+    for line in lines:
+        if ": _" in line:
+            summary = line.split(": _")[0].strip()
+            updated_summaries.append(summary)
+    with open(md_file, "w") as file:
+        for summary in updated_summaries:
+            file.write(f"{summary}\n")
+    print("Changes detected, processing md file.")
+    md_file_modified_by_script = True
+
+
 def update_tex_file_from_out(tex_file, out_file):
     global tex_file_modified_by_script
-    with open(out_file, "r") as file:
+    with open(out_file) as file:
         lines = file.readlines()
 
     updated_sentences = []
@@ -74,7 +93,7 @@ def update_tex_file_from_out(tex_file, out_file):
 
     first_sentences, paragraphs = extract_first_sentence_from_paragraphs(tex_file)
 
-    with open(tex_file, "r") as file:
+    with open(tex_file) as file:
         content = file.read()
 
     # Search for the original sentences and replace them with the updated sentences
@@ -115,6 +134,7 @@ if __name__ == "__main__":
         global out_file_modified_by_script
         if not out_file_modified_by_script:
             update_tex_file_from_out(tex_file, out_file)
+            update_md_file_from_out(md_file, out_file)
         out_file_modified_by_script = False
 
     # Monitor all files
