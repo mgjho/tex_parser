@@ -20,7 +20,9 @@ def extract_first_sentence_from_paragraphs(tex_file):
 
     # Remove figure objects
     content = re.sub(r"\\begin{figure}.*?\\end{figure}", "", content, flags=re.DOTALL)
-
+    content = re.sub(
+        r"\\begin{figure\*}.*?\\end{figure\*}", "", content, flags=re.DOTALL
+    )
     # Split the content into paragraphs by identifying empty lines between them
     paragraphs = re.split(r"\\par\n", content.strip())
     paragraphs = paragraphs[:-1]  # Skip the last paragraph
