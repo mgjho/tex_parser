@@ -64,27 +64,12 @@ def process_out_file(tex_file, out_file):
         out_file_obj.write(f"Summary of {tex_file}\n ---")
         for idx, sentence in enumerate(first_sentences):
             comment = comments[idx] if idx < len(comments) else ""
+            if not comment:
+                comment = "[Empty comment]"
             # Not having a \n after summary is intentional
-            out_file_obj.write(f"\n{idx+1}. {comment}: _{sentence}_\n")
+            out_file_obj.write(f"\n__{idx+1}. {comment}__: _{sentence}_\n")
     print("Changes detected, processing out file.")
     out_file_modified_by_script = True
-
-
-def update_md_file_from_out(md_file, out_file):
-    global md_file_modified_by_script
-    with open(out_file) as file:
-        lines = file.readlines()
-
-    updated_summaries = []
-    for line in lines:
-        if ": _" in line:
-            summary = line.split(": _")[0].strip()
-            updated_summaries.append(summary)
-    with open(md_file, "w") as file:
-        for summary in updated_summaries:
-            file.write(f"{summary}\n")
-    print("Changes detected, processing md file.")
-    md_file_modified_by_script = True
 
 
 def update_tex_file_from_out(tex_file, out_file):
@@ -93,21 +78,37 @@ def update_tex_file_from_out(tex_file, out_file):
         lines = file.readlines()
 
     updated_sentences = []
+    updated_comments = []
     for line in lines:
         if ": _" in line:
-            updated_sentence = line.split(": _")[1].strip().rstrip("_")
+            parts = line.split(": _")
+            # Extract the comment part using regular expression
+            match = re.search(r"__\d+\.\s*(.*?)__", parts[0])
+            updated_comment = match.group(1).strip() if match else ""
+            if updated_comment == "[Empty comment]":
+                updated_comment = ""
+            updated_comments.append(updated_comment)
+            updated_sentence = parts[1].strip().rstrip("_")
             updated_sentences.append(updated_sentence)
 
-    first_sentences, paragraphs = extract_first_sentence_from_paragraphs(tex_file)
+    first_sentences, comments = extract_first_sentence_from_paragraphs(tex_file)
 
     with open(tex_file) as file:
         content = file.read()
 
-    # Search for the original sentences and replace them with the updated sentences
+    # Search for the original sentences and comments, and replace them with the updated sentences and comments
     for idx, original_sentence in enumerate(first_sentences):
         if idx < len(updated_sentences):
             updated_sentence = updated_sentences[idx]
             content = content.replace(original_sentence, updated_sentence, 1)
+
+    for idx, original_comment in enumerate(comments):
+        if original_comment and idx < len(updated_comments):
+            updated_comment = updated_comments[idx]
+            # content = content.replace(original_comment, updated_comment, 1)
+            content = content.replace(
+                f"% {original_comment}", f"% {updated_comment}", 1
+            )
 
     with open(tex_file, "w") as file:
         file.write(content)
