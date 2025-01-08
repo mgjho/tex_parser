@@ -18,6 +18,9 @@ def extract_first_sentence_from_paragraphs(tex_file):
     if maketitle_pos != -1:
         content = content[maketitle_pos + len(r"\maketitle") :]
 
+    # Remove figure objects
+    content = re.sub(r"\\begin{figure}.*?\\end{figure}", "", content, flags=re.DOTALL)
+
     # Split the content into paragraphs by identifying empty lines between them
     paragraphs = re.split(r"\\par\n", content.strip())
     paragraphs = paragraphs[:-1]  # Skip the last paragraph
@@ -56,7 +59,7 @@ def process_out_file(tex_file, md_file, out_file):
         out_file_obj.write(f"Summary of {tex_file}\n ---")
         for idx, sentence in enumerate(first_sentences):
             summary = summaries[idx] if idx < len(summaries) else ""
-            summary = summary.strip()
+            summary = summary.rstrip("\n")
             # Not having a \n after summary is intentional
             out_file_obj.write(f"\n{summary}: _{sentence}_\n")
     print("Changes detected, processing out file.")
