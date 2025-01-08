@@ -57,6 +57,7 @@ def process_out_file(tex_file, md_file, out_file):
     first_sentences, _ = extract_first_sentence_from_paragraphs(tex_file)
     with open(md_file) as file:
         summaries = file.readlines()
+    summaries = [summary for summary in summaries if not summary.startswith("#")]
     with open(out_file, "w") as out_file_obj:
         out_file_obj.write(f"Summary of {tex_file}\n ---")
         for idx, sentence in enumerate(first_sentences):
