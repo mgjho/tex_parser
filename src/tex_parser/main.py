@@ -5,7 +5,6 @@ import time
 
 # Flags to prevent callback loops
 tex_file_modified_by_script = False
-md_file_modified_by_script = False
 out_file_modified_by_script = False
 
 
@@ -27,7 +26,12 @@ def extract_first_sentence_from_paragraphs(tex_file):
     paragraphs = re.split(r"\\par\n", content.strip())
     paragraphs = paragraphs[:-1]  # Skip the last paragraph
     first_sentences = []
+    comments = []
     for paragraph in paragraphs:
+        # Extract comments preceding the paragraph
+        comment_match = re.search(r"%\s*(.*?)\n", paragraph)
+        comment = comment_match.group(1) if comment_match else ""
+        comments.append(comment)
         # Split the paragraph into sentences (using common punctuation marks)
         sentences = re.split(r"(?<=[.!?]) +", paragraph)
         if sentences:
@@ -37,7 +41,7 @@ def extract_first_sentence_from_paragraphs(tex_file):
             if last_newline_pos != -1:
                 first_sentence = first_sentence[last_newline_pos + 1 :]
             first_sentences.append(first_sentence)
-    return first_sentences, paragraphs
+    return first_sentences, comments
 
 
 def monitor_file(file_path, callback, interval=1):
@@ -52,23 +56,16 @@ def monitor_file(file_path, callback, interval=1):
         time.sleep(interval)
 
 
-def process_out_file(tex_file, md_file, out_file):
+def process_out_file(tex_file, out_file):
     global out_file_modified_by_script
-    first_sentences, _ = extract_first_sentence_from_paragraphs(tex_file)
-    with open(md_file) as file:
-        summaries = file.readlines()
-    summaries = [
-        summary
-        for summary in summaries
-        if not summary.startswith("#") and not summary.startswith("<")
-    ]
+    first_sentences, comments = extract_first_sentence_from_paragraphs(tex_file)
+
     with open(out_file, "w") as out_file_obj:
         out_file_obj.write(f"Summary of {tex_file}\n ---")
         for idx, sentence in enumerate(first_sentences):
-            summary = summaries[idx] if idx < len(summaries) else ""
-            summary = summary.rstrip("\n")
+            comment = comments[idx] if idx < len(comments) else ""
             # Not having a \n after summary is intentional
-            out_file_obj.write(f"\n{summary}: _{sentence}_\n")
+            out_file_obj.write(f"\n{idx+1}. {comment}: _{sentence}_\n")
     print("Changes detected, processing out file.")
     out_file_modified_by_script = True
 
@@ -121,41 +118,29 @@ def update_tex_file_from_out(tex_file, out_file):
 if __name__ == "__main__":
     # Your tex file name goes here
     tex_file = "main.tex"
-    # Your md file name goes here, it provides that structure and user comments
-    md_file = "comments.md"
     # Output file name here
     out_file = "first_sentences.md"
 
-    process_out_file(tex_file, md_file, out_file)
+    process_out_file(tex_file, out_file)
 
     def tex_callback(file_path):
         global tex_file_modified_by_script
         if not tex_file_modified_by_script:
-            process_out_file(tex_file, md_file, out_file)
+            process_out_file(tex_file, out_file)
         tex_file_modified_by_script = False
-
-    def md_callback(file_path):
-        global md_file_modified_by_script
-        if not md_file_modified_by_script:
-            process_out_file(tex_file, md_file, out_file)
-        md_file_modified_by_script = False
 
     def out_callback(file_path):
         global out_file_modified_by_script
         if not out_file_modified_by_script:
             update_tex_file_from_out(tex_file, out_file)
-            update_md_file_from_out(md_file, out_file)
         out_file_modified_by_script = False
 
     # Monitor all files
     tex_thread = threading.Thread(target=monitor_file, args=(tex_file, tex_callback))
-    md_thread = threading.Thread(target=monitor_file, args=(md_file, md_callback))
     out_thread = threading.Thread(target=monitor_file, args=(out_file, out_callback))
 
     tex_thread.start()
-    md_thread.start()
     out_thread.start()
 
     tex_thread.join()
-    md_thread.join()
     out_thread.join()

@@ -1,7 +1,7 @@
 Summary of main.tex
  ---
-1. my comment 1: _test1_
+1. your comment here: _test1_
 
-2. my comment 2: _test2_
+2. your comment2 here: _test2_
 
-   1. my comment 3: _test3_
+3. your comment3 here: _test3_
