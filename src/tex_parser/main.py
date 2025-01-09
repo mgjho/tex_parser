@@ -82,7 +82,7 @@ def update_tex_file_from_out(tex_file, out_file):
     for line in lines:
         if ": _" in line:
             parts = line.split(": _")
-            # Extract the comment part using regular expression
+            # Extract the comment part using a regular expression
             match = re.search(r"__\d+\.\s*(.*?)__", parts[0])
             updated_comment = match.group(1).strip() if match else ""
             if updated_comment == "[Empty comment]":
@@ -96,22 +96,46 @@ def update_tex_file_from_out(tex_file, out_file):
     with open(tex_file) as file:
         content = file.read()
 
-    # Search for the original sentences and comments, and replace them with the updated sentences and comments
-    for idx, original_sentence in enumerate(first_sentences):
-        if idx < len(updated_sentences):
-            updated_sentence = updated_sentences[idx]
-            content = content.replace(original_sentence, updated_sentence, 1)
+    # Split the content into lines for easier manipulation
+    content_lines = content.splitlines()
 
-    for idx, original_comment in enumerate(comments):
-        if original_comment and idx < len(updated_comments):
-            updated_comment = updated_comments[idx]
-            # content = content.replace(original_comment, updated_comment, 1)
-            content = content.replace(
-                f"% {original_comment}", f"% {updated_comment}", 1
+    # Iterate through the paragraphs and handle sentence and comment updates
+    paragraph_idx = 0
+    for idx, line in enumerate(content_lines):
+        # Check if the line corresponds to a paragraph with a first sentence
+        if (
+            paragraph_idx < len(first_sentences)
+            and first_sentences[paragraph_idx] in line
+        ):
+            # Replace the sentence in the paragraph
+            updated_sentence = updated_sentences[paragraph_idx]
+            content_lines[idx] = line.replace(
+                first_sentences[paragraph_idx], updated_sentence, 1
             )
 
+            # Update or remove the corresponding comment above this paragraph
+            updated_comment = updated_comments[paragraph_idx]
+            if updated_comment:
+                # Check if the previous line already has a comment
+                if idx > 0 and content_lines[idx - 1].strip().startswith("%"):
+                    content_lines[idx - 1] = f"% {updated_comment}"
+                else:
+                    # Insert the new comment on the previous line
+                    content_lines.insert(idx, f"% {updated_comment}")
+                    idx += 1  # Adjust index to account for the inserted line
+            else:
+                # If there's no updated comment, remove any existing comment
+                if idx > 0 and content_lines[idx - 1].strip().startswith("%"):
+                    del content_lines[idx - 1]
+                    idx -= 1  # Adjust index to account for the removed line
+
+            paragraph_idx += 1
+
+    # Join the updated lines back into the content
+    updated_content = "\n".join(content_lines)
+
     with open(tex_file, "w") as file:
-        file.write(content)
+        file.write(updated_content)
     print("Changes detected, processing tex file.")
     tex_file_modified_by_script = True
 
